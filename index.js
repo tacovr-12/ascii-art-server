@@ -19,4 +19,4 @@ http.createServer((req, res) => {
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("404: Not found\n");
   }
-}).listen(3000, () => console.log("ASCII server ready"));
+}).listen(8000, "0.0.0.0", () => console.log("ASCII server ready"));
