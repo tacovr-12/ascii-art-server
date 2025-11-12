@@ -11,8 +11,8 @@ const files = {
 const port = 8000;
 
 // Settings
-const lineDelay = 30;     // ms between each line
-const frameRepeat = 2;    // how many times to repeat each frame
+const lineDelay = 80;     // ms between each line
+const frameRepeat = 5;    // how many times to repeat each frame
 
 // Load frames from files
 function getAllFrames() {
