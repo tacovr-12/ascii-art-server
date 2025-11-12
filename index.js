@@ -9,14 +9,15 @@ const files = {
 };
 
 const port = 8000;
-const frameDelay = 150; // ms between frames
+const lineDelay = 50;  // delay between each line
+const frameDelay = 150; // optional delay between frames
 
-// Helper: load frames from a file
+// Load frames from a file
 function loadFrames(filePath) {
   if (!fs.existsSync(filePath)) return [];
   const content = fs.readFileSync(filePath, "utf8");
   return content
-    .split(/\n\s*\n/)       // split by single empty line
+    .split(/\n\s*\n/)
     .map(f => f.trim())
     .filter(f => f.length > 0);
 }
@@ -35,7 +36,6 @@ http.createServer((req, res) => {
     return res.end("No frames to display\n");
   }
 
-  // Keep response open for streaming animation
   res.writeHead(200, {
     "Content-Type": "text/plain",
     "Transfer-Encoding": "chunked",
@@ -43,20 +43,36 @@ http.createServer((req, res) => {
 
   let frameIndex = 0;
 
-  const interval = setInterval(() => {
-    if (res.writableEnded) return clearInterval(interval);
+  function showFrame() {
+    if (res.writableEnded) return;
 
-    res.write("\x1b[2J\x1b[H"); // clear screen
-    res.write(frames[frameIndex] + "\n");
+    const lines = frames[frameIndex].split("\n");
+    let lineIndex = 0;
 
-    frameIndex = (frameIndex + 1) % frames.length; // loop forever
-  }, frameDelay);
+    function writeLine() {
+      if (res.writableEnded) return;
 
-  req.on("close", () => {
-    clearInterval(interval);
-    res.end();
-  });
+      // Clear screen at start of frame
+      if (lineIndex === 0) res.write("\x1b[2J\x1b[H");
 
+      res.write(lines[lineIndex] + "\n");
+      lineIndex++;
+
+      if (lineIndex < lines.length) {
+        setTimeout(writeLine, lineDelay);
+      } else {
+        // move to next frame after a short pause
+        frameIndex = (frameIndex + 1) % frames.length;
+        setTimeout(showFrame, frameDelay);
+      }
+    }
+
+    writeLine();
+  }
+
+  showFrame();
+
+  req.on("close", () => res.end());
 }).listen(port, "0.0.0.0", () =>
   console.log(`ASCII flipbook server running on port ${port}`)
 );
