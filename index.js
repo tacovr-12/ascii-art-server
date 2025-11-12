@@ -22,7 +22,8 @@ http.createServer((req, res) => {
     // Read all files and split into frames
     const allFrames = [];
     for (const file of Object.values(files)) {
-      const frames = fs.readFileSync(file, "utf8").split("\n\n\n");
+      const content = fs.readFileSync(file, "utf8");
+      const frames = content.split("\n\n\n").map(f => f.trim());
       allFrames.push(...frames);
     }
 
@@ -30,9 +31,10 @@ http.createServer((req, res) => {
 
     let i = 0;
     const interval = setInterval(() => {
-      res.write("\x1b[2J\x1b[H"); // clear the screen
+      if (res.writableEnded) return clearInterval(interval); // stop if connection closed
+      res.write("\x1b[2J\x1b[H"); // clear screen
       res.write(allFrames[i] + "\n");
-      i = (i + 1) % allFrames.length; // loop through all frames
+      i = (i + 1) % allFrames.length; // loop frames
     }, 100);
 
     req.on("close", () => clearInterval(interval));
@@ -43,9 +45,10 @@ http.createServer((req, res) => {
       res.writeHead(200, { "Content-Type": "text/plain" });
       const fileStream = fs.createReadStream(fileName);
       fileStream.pipe(res);
+      fileStream.on("error", () => res.end("Error reading file\n"));
     } else {
       res.writeHead(404, { "Content-Type": "text/plain" });
       res.end("404: Not found\n");
     }
   }
-}).listen(port, "0.0.0.0", () => console.log("ASCII server ready"));
+}).listen(port, "0.0.0.0", () => console.log(`ASCII server running on port ${port}`));
