@@ -11,8 +11,7 @@ const files = {
 const port = 8000;
 
 // Settings
-const lineDelay = 80;     // ms between each line
-const frameRepeat = 5;    // how many times to repeat each frame
+const frameDelay = 150; // ms between frames
 
 // Load frames from files
 function getAllFrames() {
@@ -41,35 +40,28 @@ http.createServer((req, res) => {
       return res.end("No frames to display\n");
     }
 
-    res.writeHead(200, { "Content-Type": "text/plain" });
+    // Keep response open and stream chunks
+    res.writeHead(200, {
+      "Content-Type": "text/plain",
+      "Transfer-Encoding": "chunked",
+    });
 
-    // Animation state
     let frameIndex = 0;
-    let repeatCounter = 0;
-    let lineIndex = 0;
-    let lines = allFrames[frameIndex].split("\n");
 
     const interval = setInterval(() => {
       if (res.writableEnded) return clearInterval(interval);
 
-      if (lineIndex === 0) res.write("\x1b[2J\x1b[H"); // clear screen at start of frame
-      res.write(lines[lineIndex] + "\n");
-      lineIndex++;
+      // Clear screen and write current frame
+      res.write("\x1b[2J\x1b[H");
+      res.write(allFrames[frameIndex] + "\n");
 
-      if (lineIndex >= lines.length) {
-        repeatCounter++;
-        lineIndex = 0;
-        if (repeatCounter >= frameRepeat) {
-          repeatCounter = 0;
-          frameIndex = (frameIndex + 1) % allFrames.length; // loop forever
-          lines = allFrames[frameIndex].split("\n");
-        }
-      }
-    }, lineDelay);
+      // Move to next frame, looping endlessly
+      frameIndex = (frameIndex + 1) % allFrames.length;
+    }, frameDelay);
 
     req.on("close", () => {
-      res.end();
       clearInterval(interval);
+      res.end();
     });
 
   } else {
@@ -83,4 +75,6 @@ http.createServer((req, res) => {
       res.end("404: Not found\n");
     }
   }
-}).listen(port, "0.0.0.0", () => console.log(`ASCII flipbook server running on port ${port}`));
+}).listen(port, "0.0.0.0", () =>
+  console.log(`ASCII flipbook server running on port ${port}`)
+);
