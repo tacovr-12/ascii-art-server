@@ -9,8 +9,8 @@ const files = {
 };
 
 const port = 8000;
-const lineDelay = 50;  // delay between each line
-const frameDelay = 150; // optional delay between frames
+const lineDelay = 20;  // delay between each line
+const frameDelay = 120; // optional delay between frames
 
 // Load frames from a file
 function loadFrames(filePath) {
