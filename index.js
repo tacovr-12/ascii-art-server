@@ -36,43 +36,41 @@ http.createServer((req, res) => {
     }
 
     const allFrames = getAllFrames();
-    res.writeHead(200, { "Content-Type": "text/plain" });
-
-    let frameIndex = 0;
-    let repeatCounter = 0;
-
-    function showFrame() {
-      if (res.writableEnded) return;
-
-      const lines = allFrames[frameIndex].split("\n");
-      let lineIndex = 0;
-
-      function writeLine() {
-        if (res.writableEnded) return;
-
-        if (lineIndex >= lines.length) {
-          repeatCounter++;
-          if (repeatCounter >= frameRepeat) {
-            repeatCounter = 0;
-            frameIndex = (frameIndex + 1) % allFrames.length; // loop forever
-          }
-          // Small timeout before showing the next frame
-          setTimeout(showFrame, lineDelay);
-          return;
-        }
-
-        if (lineIndex === 0) res.write("\x1b[2J\x1b[H"); // clear screen at start of frame
-        res.write(lines[lineIndex] + "\n");
-        lineIndex++;
-        setTimeout(writeLine, lineDelay);
-      }
-
-      writeLine();
+    if (allFrames.length === 0) {
+      res.writeHead(500, { "Content-Type": "text/plain" });
+      return res.end("No frames to display\n");
     }
 
-    showFrame();
+    res.writeHead(200, { "Content-Type": "text/plain" });
 
-    req.on("close", () => res.end());
+    // Animation state
+    let frameIndex = 0;
+    let repeatCounter = 0;
+    let lineIndex = 0;
+    let lines = allFrames[frameIndex].split("\n");
+
+    const interval = setInterval(() => {
+      if (res.writableEnded) return clearInterval(interval);
+
+      if (lineIndex === 0) res.write("\x1b[2J\x1b[H"); // clear screen at start of frame
+      res.write(lines[lineIndex] + "\n");
+      lineIndex++;
+
+      if (lineIndex >= lines.length) {
+        repeatCounter++;
+        lineIndex = 0;
+        if (repeatCounter >= frameRepeat) {
+          repeatCounter = 0;
+          frameIndex = (frameIndex + 1) % allFrames.length; // loop forever
+          lines = allFrames[frameIndex].split("\n");
+        }
+      }
+    }, lineDelay);
+
+    req.on("close", () => {
+      res.end();
+      clearInterval(interval);
+    });
 
   } else {
     // Serve static files
