@@ -9,7 +9,7 @@ const files = {
 };
 
 const port = 8000;
-const frameDelay = 300; // ms between chunks
+const frameDelay = 100; // ms between chunks
 
 // Load "frames" by splitting file on ', '
 function loadFrames(filePath) {
