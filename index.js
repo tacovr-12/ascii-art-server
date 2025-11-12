@@ -12,20 +12,27 @@ const port = 8000;
 
 http.createServer((req, res) => {
   if (req.url === "/repeat") {
-    // Stream ASCII animation
-    if (!fs.existsSync("ball-ball-4.txt")) {
+    // Check all files exist first
+    const missingFiles = Object.values(files).filter(f => !fs.existsSync(f));
+    if (missingFiles.length > 0) {
       res.writeHead(404, { "Content-Type": "text/plain" });
-      return res.end("Missing ball-ball-4.txt\n");
+      return res.end("Missing files: " + missingFiles.join(", ") + "\n");
     }
 
-    const frames = fs.readFileSync("ball-ball-4.txt", "utf8").split("\n\n\n");
+    // Read all files and split into frames
+    const allFrames = [];
+    for (const file of Object.values(files)) {
+      const frames = fs.readFileSync(file, "utf8").split("\n\n\n");
+      allFrames.push(...frames);
+    }
+
     res.writeHead(200, { "Content-Type": "text/plain" });
 
     let i = 0;
     const interval = setInterval(() => {
       res.write("\x1b[2J\x1b[H"); // clear the screen
-      res.write(frames[i] + "\n");
-      i = (i + 1) % frames.length;
+      res.write(allFrames[i] + "\n");
+      i = (i + 1) % allFrames.length; // loop through all frames
     }, 100);
 
     req.on("close", () => clearInterval(interval));
