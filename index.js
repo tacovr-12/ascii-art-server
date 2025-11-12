@@ -21,7 +21,7 @@ function getAllFrames() {
     if (!fs.existsSync(file)) continue;
     const content = fs.readFileSync(file, "utf8");
     // Split frames by a single empty line
-    const frames = content.split(/\n\s*\n/).map(f => f.trim());
+    const frames = content.split(/\n\s*\n/).map(f => f.trim()).filter(f => f.length > 0);
     allFrames.push(...frames);
   }
   return allFrames;
@@ -54,8 +54,9 @@ http.createServer((req, res) => {
           repeatCounter++;
           if (repeatCounter >= frameRepeat) {
             repeatCounter = 0;
-            frameIndex = (frameIndex + 1) % allFrames.length; // next frame
+            frameIndex = (frameIndex + 1) % allFrames.length; // loop forever
           }
+          // Small timeout before showing the next frame
           setTimeout(showFrame, lineDelay);
           return;
         }
