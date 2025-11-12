@@ -9,15 +9,14 @@ const files = {
 };
 
 const port = 8000;
-const lineDelay = 10;  // delay between each line
-const frameDelay = 110; // optional delay between frames
+const frameDelay = 300; // ms between chunks
 
-// Load frames from a file
+// Load "frames" by splitting file on ', '
 function loadFrames(filePath) {
   if (!fs.existsSync(filePath)) return [];
   const content = fs.readFileSync(filePath, "utf8");
   return content
-    .split(/\n\s*\n/)
+    .split(/,\s*'/)     // split on your ', ' separator
     .map(f => f.trim())
     .filter(f => f.length > 0);
 }
@@ -43,36 +42,20 @@ http.createServer((req, res) => {
 
   let frameIndex = 0;
 
-  function showFrame() {
-    if (res.writableEnded) return;
+  const interval = setInterval(() => {
+    if (res.writableEnded) return clearInterval(interval);
 
-    const lines = frames[frameIndex].split("\n");
-    let lineIndex = 0;
+    res.write("\x1b[2J\x1b[H"); // clear screen
+    res.write(frames[frameIndex] + "\n");
 
-    function writeLine() {
-      if (res.writableEnded) return;
+    frameIndex = (frameIndex + 1) % frames.length; // loop forever
+  }, frameDelay);
 
-      // Clear screen at start of frame
-      if (lineIndex === 0) res.write("\x1b[2J\x1b[H");
+  req.on("close", () => {
+    clearInterval(interval);
+    res.end();
+  });
 
-      res.write(lines[lineIndex] + "\n");
-      lineIndex++;
-
-      if (lineIndex < lines.length) {
-        setTimeout(writeLine, lineDelay);
-      } else {
-        // move to next frame after a short pause
-        frameIndex = (frameIndex + 1) % frames.length;
-        setTimeout(showFrame, frameDelay);
-      }
-    }
-
-    writeLine();
-  }
-
-  showFrame();
-
-  req.on("close", () => res.end());
 }).listen(port, "0.0.0.0", () =>
   console.log(`ASCII flipbook server running on port ${port}`)
 );
