@@ -5,7 +5,7 @@ const files = {
   "/nub-oil": "nub-oil.txt",
   "/too-silly": "too-silly.txt",
   "/ball-ball-4": "ball-ball-4.txt",
-  "/nub-67": "nub-67.txt"
+  "/nub-67": "nub-67.txt",
   "/world": "world.txt"
 };
 
