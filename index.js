@@ -5,11 +5,12 @@ const files = {
   "/nub-oil": "nub-oil.txt",
   "/too-silly": "too-silly.txt",
   "/ball-ball-4": "ball-ball-4.txt",
-  "/nub-67": "nub-67.txt"
+  "/nub-67": "nub-67.txt",
+  "/world": "world.txt"
 };
 
 const port = 8000;
-const frameDelay = 100; // ms between chunks
+const frameDelay = 200; // ms between chunks
 
 // Load "frames" by splitting file on ', '
 function loadFrames(filePath) {
