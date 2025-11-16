@@ -6,7 +6,8 @@ const files = {
   "/too-silly": "too-silly.txt",
   "/ball-ball-4": "ball-ball-4.txt",
   "/nub-67": "nub-67.txt",
-  "/world": "world.txt"
+  "/world": "world.txt",
+  "/pixelgrew": "pixelgrew.txt"
 };
 
 const port = 8000;
